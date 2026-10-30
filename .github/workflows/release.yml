@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: 前端构建
+        run: |
+          cd web
+          npm ci
+          npm run build
+
+      - name: 打包产物
+        run: |
+          cd web/dist
+          tar -czf ../../web-dist.tar.gz .
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: web-dist.tar.gz
+          generate_release_notes: true

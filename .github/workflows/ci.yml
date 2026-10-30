@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            track-pi/package-lock.json
+            web/package-lock.json
+
+      - name: 安装后端依赖
+        run: npm ci
+        working-directory: track-pi
+
+      - name: 安装前端依赖
+        run: npm ci
+        working-directory: web
+
+      - name: 结构自检与密钥扫描
+        run: node scripts/check.mjs
+
+      - name: 后端类型检查
+        run: npm run check
+        working-directory: track-pi
+
+      - name: 前端构建
+        run: npm run build
+        working-directory: web
+
+      - name: 冒烟测试
+        run: node scripts/smoke.mjs
